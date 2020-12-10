@@ -4,11 +4,11 @@ COPY install_app.sh /install_app
 
 RUN /install_app timg_integration https://github.com/seethersan/timg_integration version-12
 
-FROM frappe/erpnext-nginx:edge
+FROM frappe/erpnext-nginx:version-12
 
 COPY --from=0 /home/frappe/frappe-bench/sites/ /var/www/html/
 COPY --from=0 /rsync /rsync
-RUN echo -n "\ntimg_integration" >> /var/www/html/apps.txt
+RUN echo "timg_integration" >> /var/www/html/apps.txt
 
 VOLUME [ "/assets" ]
 

@@ -48,7 +48,7 @@ services:
       - assets-vol:/assets:rw
 
   erpnext-python:
-    image: frappe/erpnext-worker:${ERPNEXT_VERSION}
+    image: seethersan/timg_integration-worker:${FRAPPE_VERSION}
     restart: on-failure
     environment:
       - MARIADB_HOST=${MARIADB_HOST}
@@ -61,26 +61,71 @@ services:
       - sites-vol:/home/frappe/frappe-bench/sites:rw
       - assets-vol:/home/frappe/frappe-bench/sites/assets:rw
 
+  timg_integration-assets:
+    image: seethersan/timg_integration-assets:${FRAPPE_VERSION}
+    restart: on-failure
+    environment:
+      - FRAPPE_PY=timg_integration-python
+      - FRAPPE_PY_PORT=8000
+      - FRAPPE_SOCKETIO=frappe-socketio
+      - SOCKETIO_PORT=9000
+      - LETSENCRYPT_HOST=${SITES}
+      - VIRTUAL_HOST=${SITES}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+    depends_on:
+      - timg_integration-python
+      - frappe-socketio
+      - frappe-worker-default
+      - frappe-worker-long
+      - frappe-worker-short
+    links:
+      - timg_integration-python
+      - frappe-socketio
+      - frappe-worker-default
+      - frappe-worker-long
+      - frappe-worker-short
+    volumes:
+      - sites-vol:/var/www/html/sites:rw
+      - assets-vol:/assets:rw
+
+  timg_integration-python:
+    image: seethersan/timg_integration-worker:${FRAPPE_VERSION}
+    restart: on-failure
+    environment:
+      - MARIADB_HOST=${MARIADB_HOST}
+      - REDIS_CACHE=redis-cache:6379
+      - REDIS_QUEUE=redis-queue:6379
+      - REDIS_SOCKETIO=redis-socketio:6379
+      - SOCKETIO_PORT=9000
+    volumes:
+      - sites-vol:/home/frappe/frappe-bench/sites:rw
+      - assets-vol:/home/frappe/frappe-bench/sites/assets:rw
+
   frappe-socketio:
     image: frappe/frappe-socketio:${FRAPPE_VERSION}
     restart: on-failure
     depends_on:
       - redis-socketio
+    links:
+      - redis-socketio
     volumes:
       - sites-vol:/home/frappe/frappe-bench/sites:rw
 
-  erpnext-worker-default:
-    image: frappe/erpnext-worker:${ERPNEXT_VERSION}
+  frappe-worker-default:
+    image: seethersan/timg_integration-worker:${FRAPPE_VERSION}
     restart: on-failure
     command: worker
     depends_on:
       - redis-queue
       - redis-cache
+    links:
+      - redis-queue
+      - redis-cache
     volumes:
       - sites-vol:/home/frappe/frappe-bench/sites:rw
 
-  erpnext-worker-short:
-    image: frappe/erpnext-worker:${ERPNEXT_VERSION}
+  frappe-worker-short:
+    image: seethersan/timg_integration-worker:${FRAPPE_VERSION}
     restart: on-failure
     command: worker
     environment:
@@ -88,11 +133,14 @@ services:
     depends_on:
       - redis-queue
       - redis-cache
+    links:
+      - redis-queue
+      - redis-cache
     volumes:
       - sites-vol:/home/frappe/frappe-bench/sites:rw
 
-  erpnext-worker-long:
-    image: frappe/erpnext-worker:${ERPNEXT_VERSION}
+  frappe-worker-long:
+    image: seethersan/timg_integration-worker:${FRAPPE_VERSION}
     restart: on-failure
     command: worker
     environment:
@@ -100,14 +148,20 @@ services:
     depends_on:
       - redis-queue
       - redis-cache
+    links:
+      - redis-queue
+      - redis-cache
     volumes:
       - sites-vol:/home/frappe/frappe-bench/sites:rw
 
-  erpnext-schedule:
-    image: frappe/erpnext-worker:${ERPNEXT_VERSION}
+  frappe-schedule:
+    image: seethersan/timg_integration-worker:${FRAPPE_VERSION}
     restart: on-failure
     command: schedule
     depends_on:
+      - redis-queue
+      - redis-cache
+    links:
       - redis-queue
       - redis-cache
     volumes:
@@ -141,7 +195,7 @@ services:
       - mariadb-vol:/var/lib/mysql
 
   site-creator:
-    image: frappe/erpnext-worker:${ERPNEXT_VERSION}
+    image: seethersan/timg_integration-worker:${FRAPPE_VERSION}
     restart: "no"
     command: new
     depends_on:

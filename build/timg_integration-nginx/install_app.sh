@@ -8,7 +8,7 @@ APP_BRANCH=${3}
 
 mkdir -p /home/frappe/frappe-bench/sites/assets
 cd /home/frappe/frappe-bench
-echo -e "frappe\n${APP_NAME}" > /home/frappe/frappe-bench/sites/apps.txt
+echo -e "${APP_NAME}" >> /home/frappe/frappe-bench/sites/apps.txt
 
 install_packages git python2
 
@@ -25,7 +25,6 @@ yarn install --production=true
 yarn add node-sass
 
 mkdir -p /home/frappe/frappe-bench/sites/assets/${APP_NAME}
-cp -R /home/frappe/frappe-bench/apps/${APP_NAME}/${APP_NAME}/public/* /home/frappe/frappe-bench/sites/assets/${APP_NAME}
 
 # Add frappe and all the apps available under in frappe-bench here
 echo "rsync -a --delete /var/www/html/assets/frappe /assets" > /rsync
